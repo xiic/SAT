@@ -3,16 +3,18 @@ from __future__ import annotations
 import logging
 import typing
 
+from homeassistant.components import climate
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfPower, UnitOfTemperature, UnitOfVolume
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfPower, UnitOfTemperature, UnitOfVolume
 from homeassistant.core import HomeAssistant, Event, EventStateChangedData
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import CONF_MODE, MODE_SERIAL, CONF_NAME, DOMAIN, COORDINATOR, CLIMATE, MODE_SIMULATOR, CONF_MINIMUM_CONSUMPTION, CONF_MAXIMUM_CONSUMPTION
+from .const import CONF_MODE, MODE_SERIAL, CONF_NAME, DOMAIN, COORDINATOR, CLIMATE, MODE_SIMULATOR, CONF_MINIMUM_CONSUMPTION, CONF_MAXIMUM_CONSUMPTION, MODE_GENERIC, CONF_GENERIC_INSIDE_SENSOR_ENTITY_ID
 from .coordinator import SatDataUpdateCoordinator
 from .entity import SatEntity, SatClimateEntity
+from .helpers import float_value, snake_case
 from .serial import sensor as serial_sensor
 from .simulator import sensor as simulator_sensor
 
@@ -40,6 +42,9 @@ async def async_setup_entry(_hass: HomeAssistant, _config_entry: ConfigEntry, _a
     # Check if integration is set to use the simulator
     if _config_entry.data.get(CONF_MODE) == MODE_SIMULATOR:
         await simulator_sensor.async_setup_entry(_hass, _config_entry, _async_add_entities)
+
+    if _config_entry.data.get(CONF_MODE) == MODE_GENERIC and _config_entry.data.get(CONF_GENERIC_INSIDE_SENSOR_ENTITY_ID):
+        _async_add_entities([SatGenericInsideTemperatureSensor(coordinator, _config_entry)])
 
     _async_add_entities([
         SatFlameSensor(coordinator, _config_entry),
@@ -285,3 +290,53 @@ class SatBoilerSensor(SatEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         return f"{self._config_entry.data.get(CONF_NAME).lower()}-boiler-status"
+
+
+class SatGenericInsideTemperatureSensor(SatEntity, SensorEntity):
+    def __init__(self, coordinator: SatDataUpdateCoordinator, config_entry: ConfigEntry):
+        super().__init__(coordinator, config_entry)
+        self._source_entity_id = config_entry.data.get(CONF_GENERIC_INSIDE_SENSOR_ENTITY_ID)
+        self._attr_entity_id = f"sensor.sat_{snake_case(self._config_entry.data.get(CONF_NAME))}_inside_temperature"
+
+    async def async_added_to_hass(self) -> None:
+        async def on_state_change(_event: Event[EventStateChangedData]):
+            self.async_write_ha_state()
+
+        if self._source_entity_id:
+            self.async_on_remove(
+                async_track_state_change_event(self.hass, [self._source_entity_id], on_state_change)
+            )
+
+    @property
+    def name(self) -> str:
+        return f"Inside Temperature {self._config_entry.data.get(CONF_NAME)}"
+
+    @property
+    def device_class(self):
+        return SensorDeviceClass.TEMPERATURE
+
+    @property
+    def native_unit_of_measurement(self):
+        return UnitOfTemperature.CELSIUS
+
+    @property
+    def available(self):
+        return self.native_value is not None
+
+    @property
+    def native_value(self) -> float | None:
+        if not self._source_entity_id:
+            return None
+
+        state = self.hass.states.get(self._source_entity_id)
+        if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return None
+
+        if state.domain == climate.DOMAIN:
+            return float_value(state.attributes.get("current_temperature"))
+
+        return float_value(state.state)
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._config_entry.data.get(CONF_NAME).lower()}-generic-inside-temperature"

@@ -3,9 +3,10 @@ from __future__ import annotations
 import logging
 from typing import Mapping, Any, Optional
 
-from homeassistant.components import input_boolean, number, switch
+from homeassistant.components import climate, input_boolean, number, switch
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -109,8 +110,13 @@ class SatGenericCoordinator(SatDataUpdateCoordinator):
 
     async def async_set_control_setpoint(self, value: float) -> None:
         if not self._simulation and self._control_setpoint_entity_id:
-            payload = {ATTR_ENTITY_ID: self._control_setpoint_entity_id, "value": value}
-            await self.hass.services.async_call(number.DOMAIN, number.SERVICE_SET_VALUE, payload, blocking=True)
+            domain = self._control_setpoint_entity_id.split(".", 1)[0]
+            if domain == climate.DOMAIN:
+                payload = {ATTR_ENTITY_ID: self._control_setpoint_entity_id, ATTR_TEMPERATURE: value}
+                await self.hass.services.async_call(climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, payload, blocking=True)
+            else:
+                payload = {ATTR_ENTITY_ID: self._control_setpoint_entity_id, "value": value}
+                await self.hass.services.async_call(number.DOMAIN, number.SERVICE_SET_VALUE, payload, blocking=True)
 
         await super().async_set_control_setpoint(value)
 
@@ -133,5 +139,8 @@ class SatGenericCoordinator(SatDataUpdateCoordinator):
         state = self.hass.states.get(entity_id)
         if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return None
+
+        if state.domain == climate.DOMAIN:
+            return float_value(state.attributes.get(ATTR_TEMPERATURE))
 
         return float_value(state.state)

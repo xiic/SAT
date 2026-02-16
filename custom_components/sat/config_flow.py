@@ -195,7 +195,7 @@ class SatFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({
                 vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Required(CONF_GENERIC_CONTROL_SETPOINT_ENTITY_ID): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=number.DOMAIN)
+                    selector.EntitySelectorConfig(domain=[number.DOMAIN, climate.DOMAIN])
                 ),
                 vol.Required(CONF_GENERIC_BOILER_TEMPERATURE_ENTITY_ID): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=[sensor.DOMAIN, number.DOMAIN])
@@ -303,6 +303,14 @@ class SatFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if _user_input is not None:
             self.data.update(_user_input)
 
+            if self.data.get(CONF_MODE) == MODE_GENERIC:
+                inside_sensor = self.data.get(CONF_INSIDE_SENSOR_ENTITY_ID)
+                if isinstance(inside_sensor, str) and inside_sensor.startswith(f"{climate.DOMAIN}."):
+                    self.data[CONF_GENERIC_INSIDE_SENSOR_ENTITY_ID] = inside_sensor
+                    self.data[CONF_INSIDE_SENSOR_ENTITY_ID] = f"sensor.sat_{snake_case(self.data.get(CONF_NAME))}_inside_temperature"
+                else:
+                    self.data[CONF_GENERIC_INSIDE_SENSOR_ENTITY_ID] = None
+
             if _user_input.get(CONF_HUMIDITY_SENSOR_ENTITY_ID) is None:
                 self.data[CONF_HUMIDITY_SENSOR_ENTITY_ID] = None
 
@@ -313,7 +321,7 @@ class SatFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.data.get(CONF_MODE) == MODE_GENERIC:
             inside_sensor_selector = selector.EntitySelector(
-                selector.EntitySelectorConfig(domain=[sensor.DOMAIN, number.DOMAIN])
+                selector.EntitySelectorConfig(domain=[sensor.DOMAIN, number.DOMAIN, climate.DOMAIN])
             )
         else:
             inside_sensor_selector = selector.EntitySelector(

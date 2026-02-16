@@ -75,6 +75,7 @@ CONF_HUMIDITY_SENSOR_ENTITY_ID = "humidity_sensor_entity_id"
 CONF_GENERIC_CONTROL_SETPOINT_ENTITY_ID = "generic_control_setpoint_entity_id"
 CONF_GENERIC_BOILER_TEMPERATURE_ENTITY_ID = "generic_boiler_temperature_entity_id"
 CONF_GENERIC_DEVICE_ACTIVE_ENTITY_ID = "generic_device_active_entity_id"
+CONF_GENERIC_INSIDE_SENSOR_ENTITY_ID = "generic_inside_sensor_entity_id"
 
 CONF_HEATING_MODE = "heating_mode"
 CONF_HEATING_SYSTEM = "heating_system"
