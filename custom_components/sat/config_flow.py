@@ -11,8 +11,15 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.helpers import selector, entity_registry
 from homeassistant.helpers.selector import SelectSelectorMode, SelectOptionDict
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+try:
+    from homeassistant.components.dhcp import DhcpServiceInfo
+except ImportError:  # Backward compatibility for older Home Assistant versions
+    from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+
+try:
+    from homeassistant.helpers.service_info import MqttServiceInfo
+except ImportError:  # Backward compatibility for older Home Assistant versions
+    from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from pyotgw import OpenThermGateway
 from voluptuous import Marker
 

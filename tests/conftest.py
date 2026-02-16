@@ -1,5 +1,8 @@
 """Fixtures for testing."""
+import sys
+
 import pytest
+import pytest_socket
 from _pytest.logging import LogCaptureFixture
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -13,6 +16,21 @@ from tests.const import DEFAULT_USER_DATA
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
+    yield
+
+
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_fixture_setup(fixturedef):
+    """Allow socket creation on Windows for the event loop."""
+    if sys.platform.startswith("win") and fixturedef.argname == "event_loop":
+        pytest_socket.enable_socket()
+        try:
+            yield
+        finally:
+            pytest_socket.socket_allow_hosts(["127.0.0.1"])
+            pytest_socket.disable_socket(allow_unix_socket=True)
+        return
+
     yield
 
 
