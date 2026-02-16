@@ -13,6 +13,16 @@
       "calibration": "A calibrar e a encontrar o valor de proteção contra overshoot...\n\nPor favor, aguarde enquanto otimizamos o seu sistema de aquecimento. Este processo pode demorar aproximadamente 20 minutos."
     },
     "step": {
+      "generic": {
+        "data": {
+          "name": "Name",
+          "generic_control_setpoint_entity_id": "Control Setpoint Entity",
+          "generic_boiler_temperature_entity_id": "Boiler Temperature Entity",
+          "generic_device_active_entity_id": "Heater Switch Entity"
+        },
+        "description": "Select the entities SAT should read and control.",
+        "title": "Generic Entities"
+      },
       "areas": {
         "data": {
           "main_climates": "Principal",
@@ -150,6 +160,7 @@
           "error_monitoring": "Ativar monitoramento de erros",
           "climate_valve_offset": "Offset da válvula do clima",
           "dynamic_minimum_setpoint": "Setpoint Mínimo Dinâmico (Experimental)",
+          "generic": "Generic Entities (User-selected entities)",
           "force_pulse_width_modulation": "Forçar Modulação por Largura de Pulso",
           "maximum_consumption": "Consumo Máximo",
           "maximum_relative_modulation": "Modulação Relativa Máxima",

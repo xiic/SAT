@@ -13,6 +13,16 @@
       "calibration": "Kalibreren en de waarde van de overshootbeveiliging vinden...\n\nEven geduld a.u.b. terwijl wij uw verwarmingssysteem optimaliseren. Dit proces kan ongeveer 20 minuten duren."
     },
     "step": {
+      "generic": {
+        "data": {
+          "name": "Name",
+          "generic_control_setpoint_entity_id": "Control Setpoint Entity",
+          "generic_boiler_temperature_entity_id": "Boiler Temperature Entity",
+          "generic_device_active_entity_id": "Heater Switch Entity"
+        },
+        "description": "Select the entities SAT should read and control.",
+        "title": "Generic Entities"
+      },
       "areas": {
         "data": {
           "main_climates": "Primair",
@@ -150,6 +160,7 @@
           "error_monitoring": "Foutbewaking inschakelen",
           "climate_valve_offset": "Offset van Klimaatklep",
           "dynamic_minimum_setpoint": "Dynamisch Minimaal Setpoint (Experimenteel)",
+          "generic": "Generic Entities (User-selected entities)",
           "force_pulse_width_modulation": "Dwing Pulsbreedtemodulatie af",
           "maximum_consumption": "Maximaal Verbruik",
           "maximum_relative_modulation": "Maximale Relatieve Modulatie",

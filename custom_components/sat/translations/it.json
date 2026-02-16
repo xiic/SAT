@@ -13,6 +13,16 @@
       "calibration": "Calibrazione e ricerca del valore di protezione dal superamento in corso...\n\nSi prega di attendere mentre ottimizziamo il tuo sistema di riscaldamento. Questo processo può richiedere circa 20 minuti."
     },
     "step": {
+      "generic": {
+        "data": {
+          "name": "Name",
+          "generic_control_setpoint_entity_id": "Control Setpoint Entity",
+          "generic_boiler_temperature_entity_id": "Boiler Temperature Entity",
+          "generic_device_active_entity_id": "Heater Switch Entity"
+        },
+        "description": "Select the entities SAT should read and control.",
+        "title": "Generic Entities"
+      },
       "areas": {
         "data": {
           "main_climates": "Primari",
@@ -136,6 +146,7 @@
           "mosquitto": "Gateway MQTT (OpenTherm, EMS-ESP, altri)",
           "serial": "Gateway seriale (es. OpenTherm)",
           "esphome": "ESPHome (Servizi e sensori di sistema)",
+          "generic": "Generic Entities (User-selected entities)",
           "simulator": "Gateway simulato (Solo per sviluppatori)",
           "switch": "Termostato PID (Modalità PWM Acceso/Spento)"
         },

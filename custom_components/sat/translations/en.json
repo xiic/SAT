@@ -103,6 +103,16 @@
         "description": "Please select the sensors that will be used to track the temperature.",
         "title": "Configure sensors"
       },
+      "generic": {
+        "data": {
+          "name": "Name",
+          "generic_control_setpoint_entity_id": "Control Setpoint Entity",
+          "generic_boiler_temperature_entity_id": "Boiler Temperature Entity",
+          "generic_device_active_entity_id": "Heater Switch Entity"
+        },
+        "description": "Select the entities SAT should read and control.",
+        "title": "Generic Entities"
+      },
       "serial": {
         "data": {
           "device": "URL",
@@ -138,6 +148,7 @@
           "mosquitto": "MQTT Gateway (OpenTherm, EMS-ESP, others)",
           "serial": "Serial Gateway (e.g., OpenTherm)",
           "esphome": "ESPHome (System services and sensors)",
+          "generic": "Generic Entities (User-selected entities)",
           "simulator": "Simulated Gateway (Developer use only)",
           "switch": "PID Thermostat (PWM On/Off mode)"
         },
