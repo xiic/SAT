@@ -78,6 +78,10 @@ class SatDataUpdateCoordinatorFactory:
             from .esphome import SatEspHomeCoordinator
             return SatEspHomeCoordinator(hass=hass, device_id=device, config_data=data, options=options)
 
+        if mode == MODE_GENERIC:
+            from .generic import SatGenericCoordinator
+            return SatGenericCoordinator(hass=hass, config_data=data, options=options)
+
         if mode == MODE_MQTT_EMS:
             from .mqtt.ems import SatEmsMqttCoordinator
             return SatEmsMqttCoordinator(hass=hass, device_id=device, config_data=data, options=options)

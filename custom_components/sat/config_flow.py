@@ -5,7 +5,7 @@ from typing import Optional, Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.components import sensor, switch, valve, weather, binary_sensor, climate, input_boolean
+from homeassistant.components import sensor, switch, valve, weather, binary_sensor, climate, input_boolean, number
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
@@ -67,7 +67,8 @@ class SatFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "mosquitto",
             "esphome",
             "serial",
-            "switch"
+            "switch",
+            "generic"
         ]
 
         if self.show_advanced_options:
@@ -180,6 +181,31 @@ class SatFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }),
         )
 
+    async def async_step_generic(self, _user_input: dict[str, Any] | None = None):
+        if _user_input is not None:
+            self.data.update(_user_input)
+            self.data[CONF_MODE] = MODE_GENERIC
+            self.data[CONF_DEVICE] = self.data.get(CONF_GENERIC_CONTROL_SETPOINT_ENTITY_ID) or f"{MODE_GENERIC}_{snake_case(self.data.get(CONF_NAME))}"
+
+            return await self.async_step_sensors()
+
+        return self.async_show_form(
+            step_id="generic",
+            last_step=False,
+            data_schema=vol.Schema({
+                vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+                vol.Required(CONF_GENERIC_CONTROL_SETPOINT_ENTITY_ID): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=number.DOMAIN)
+                ),
+                vol.Required(CONF_GENERIC_BOILER_TEMPERATURE_ENTITY_ID): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=[sensor.DOMAIN, number.DOMAIN])
+                ),
+                vol.Optional(CONF_GENERIC_DEVICE_ACTIVE_ENTITY_ID): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=[switch.DOMAIN, input_boolean.DOMAIN])
+                ),
+            }),
+        )
+
     async def async_step_serial(self, _user_input: dict[str, Any] | None = None):
         if _user_input is not None:
             self.errors = {}
@@ -280,18 +306,25 @@ class SatFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if _user_input.get(CONF_HUMIDITY_SENSOR_ENTITY_ID) is None:
                 self.data[CONF_HUMIDITY_SENSOR_ENTITY_ID] = None
 
-            if self.data[CONF_MODE] in [MODE_ESPHOME, MODE_MQTT_OPENTHERM, MODE_MQTT_EMS, MODE_SERIAL, MODE_SIMULATOR]:
+            if self.data[CONF_MODE] in [MODE_ESPHOME, MODE_MQTT_OPENTHERM, MODE_MQTT_EMS, MODE_SERIAL, MODE_SIMULATOR, MODE_GENERIC]:
                 return await self.async_step_heating_system()
 
             return await self.async_step_areas()
+
+        if self.data.get(CONF_MODE) == MODE_GENERIC:
+            inside_sensor_selector = selector.EntitySelector(
+                selector.EntitySelectorConfig(domain=[sensor.DOMAIN, number.DOMAIN])
+            )
+        else:
+            inside_sensor_selector = selector.EntitySelector(
+                selector.EntitySelectorConfig(domain=sensor.DOMAIN, device_class=[sensor.SensorDeviceClass.TEMPERATURE])
+            )
 
         return self.async_show_form(
             last_step=False,
             step_id="sensors",
             data_schema=self.add_suggested_values_to_schema(vol.Schema({
-                vol.Required(CONF_INSIDE_SENSOR_ENTITY_ID): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=sensor.DOMAIN, device_class=[sensor.SensorDeviceClass.TEMPERATURE])
-                ),
+                vol.Required(CONF_INSIDE_SENSOR_ENTITY_ID): inside_sensor_selector,
                 vol.Required(CONF_OUTSIDE_SENSOR_ENTITY_ID): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=[sensor.DOMAIN, weather.DOMAIN], multiple=True)
                 ),
